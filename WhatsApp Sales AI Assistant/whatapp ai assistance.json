@@ -1,0 +1,924 @@
+{
+  "name": "whatapp  ai assistance",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1968,
+        -512
+      ],
+      "id": "928e1810-8d22-495c-b57e-d7e655a0c03a",
+      "name": "WhatsApp Trigger",
+      "webhookId": "1a5c3889-14ba-4147-b3ca-344d5fa41747",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "lMTEsNTbeoqfaGrM",
+          "name": "WhatsApp OAuth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -512
+      ],
+      "id": "09fb854b-8e42-4dcd-a102-331f75f34f45",
+      "name": "WhatsApp Business Cloud",
+      "webhookId": "24cfab29-cbeb-4227-ab27-4715d5a97bd3",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "RwPMwQYIXVDbr4QZ",
+          "name": "WhatsApp account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "=audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "030b1fb1-698f-4454-bb67-fdda5c7b6b1b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b1ea2b02-9ef4-4d21-beaa-da792faff901",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "=text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1792,
+        -512
+      ],
+      "id": "08d91d4a-642a-487d-b89b-1ff8b180c378",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $('WhatsApp Trigger').item.json.messages[0].audio.id }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        -688
+      ],
+      "id": "e154b7c7-7638-4217-adfb-a082622e7570",
+      "name": "WhatsApp Business Cloud1",
+      "webhookId": "e0b23033-8f65-4a85-a154-7d0a1efb6a64",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "RwPMwQYIXVDbr4QZ",
+          "name": "WhatsApp account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -848,
+        -688
+      ],
+      "id": "4bb9e699-acd7-436c-87a6-436ae0a0ccda",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "RTZ6Wxq3SerBf3uc",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ( paste your whatapp Access Token)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1072,
+        -688
+      ],
+      "id": "ab0a1132-f6f2-4192-bbaf-8a43be40781c",
+      "name": "HTTP Request",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "MMBjuKnfwn77JxBz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0aa4c66b-2dd6-4cad-84df-77aac3dc474f",
+              "name": "text",
+              "value": "={{ $json.messages[0].text.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1072,
+        -416
+      ],
+      "id": "153a1846-f994-4fff-a3be-bcd8ccb7229d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "17078044-26b6-441b-a350-fa982bcfdd65",
+                    "leftValue": "={{ $json.messages[0].text.body }}",
+                    "rightValue": "Train:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notStartsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages[0].text.body }}",
+                    "rightValue": "Train:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "fb4df7fe-60da-458e-b101-3d4b92d8cafa"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "train"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1600,
+        -368
+      ],
+      "id": "0fc220dc-632e-44b3-94d6-2735ede6535f",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg",
+          "mode": "list",
+          "cachedResultName": "Whatapp Ai agent sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Product Link": "={{ $('Function - Extract URL').item.json.product_url }}",
+            "Product Description": "={{ $json.cleanedText }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Product Link",
+              "displayName": "Product Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Name",
+              "displayName": "Product Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Price",
+              "displayName": "Product Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Description",
+              "displayName": "Product Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -880,
+        -96
+      ],
+      "id": "97377d16-b106-4716-b6cf-3372ebf4484b",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i02LENEj7miQPKBt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.messages[0].id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -560,
+        176
+      ],
+      "id": "334a682e-3013-4776-8e68-c90badc1fb5a",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the url of the product: {{ $('Function - Extract URL').item.json.product_url }}\n\nProduct Description:\n\n{{ $('Function - Extract Text').item.json.cleanedText }}\n\n",
+        "options": {
+          "systemMessage": "=You are a helpful assistant\n\nYou have received the text of a product page. your job is to extract the product name and the product price.\n\nYou have access to the google Sheets tool that allows you to update columns and cells inside a google sheet.\n\nYour task is to always add the price and product name and product topic inside to the google sheet to the exact same row with the url of the product you received. \n\nWhen you add the product price make sure to clearly identfy from the product description if its a subscription or onetime payment.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -640,
+        -96
+      ],
+      "id": "0d28579b-601a-4385-b635-de97f310d173",
+      "name": "Training - AI Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant.\n\nYou have access to the Google Sheets tool that allows you to read any content from that google sheet. your job is to acess it to get the infor you need.\n\nNever tell the user that you used Google sheets to retreive the data. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -672,
+        -512
+      ],
+      "id": "d4ff00e2-06ca-4dde-8200-141e9a6ab7b6",
+      "name": "Support - AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg",
+          "mode": "list",
+          "cachedResultName": "Whatapp Ai agent sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Product Link": "={{ $fromAI(\"product_url\",\"this is the website link of the product\") }}",
+            "Product Name": "={{ $fromAI(\"product_name\",\"this is the name of the product\") }}",
+            "Product Price": "={{ $fromAI(\"product_price\",\"this is the price of the product\") }}",
+            "Product Topic": "={{ $fromAI(\"product_topic\",\"this is the topic of the product that specifies what it is for, who it is for and what the key benefits are\") }}"
+          },
+          "matchingColumns": [
+            "Product Link"
+          ],
+          "schema": [
+            {
+              "id": "Product Link",
+              "displayName": "Product Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Product Name",
+              "displayName": "Product Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Price",
+              "displayName": "Product Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Description",
+              "displayName": "Product Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Product Topic",
+              "displayName": "Product Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -400,
+        176
+      ],
+      "id": "d4176fd8-789d-49db-aea1-21181f4c0beb",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i02LENEj7miQPKBt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.messages[0].id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        -304
+      ],
+      "id": "dc74ff84-d17f-48ce-afa7-54b387cbabf8",
+      "name": "Window Buffer Memory1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg",
+          "mode": "list",
+          "cachedResultName": "Whatapp Ai agent sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVt3PO0Wmlbqrvv2rCcmn9XqT_vX1qQeawP_jEvz6wg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -448,
+        -304
+      ],
+      "id": "d24164fb-3420-4ae0-989c-df923f5cd8c0",
+      "name": "Google Sheets2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i02LENEj7miQPKBt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $input.first().json.messages[0].text.body;\nconst urlMatch = message.match(/(?:https?:\\/\\/)?([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}(?:\\/\\S*)?)/);\nif (urlMatch) {\n    let url = urlMatch[0];\n    if (!url.startsWith(\"http\")) {\n        url = \"https://\" + url; // Add https:// if missing\n    }\n    return [{ product_url: url }];\n} else {\n    return [{ product_url: \"Invalid URL\" }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        -96
+      ],
+      "id": "bcd5dd9f-0ed0-47af-9111-eec2963af43a",
+      "name": "Function - Extract URL"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the HTML content from the previous node\nconst htmlContent = $input.first().json.data; // Ensure 'body' contains the HTML response\n\n// Check if htmlContent exists and is a string\nif (typeof htmlContent !== 'string') {\n  throw new Error('Expected HTML content, but received non-string data.');\n}\n\n// Clean up the content:\n\n// Remove all <a> tags (links) and their content\nlet cleanedText = htmlContent.replace(/<a[^>]*>(.*?)<\\/a>/g, '');\n\n// Remove all script, style, and other non-text elements\ncleanedText = cleanedText.replace(/<script[^>]*>.*?<\\/script>/gs, '');\ncleanedText = cleanedText.replace(/<style[^>]*>.*?<\\/style>/gs, '');\n\n// Add line breaks for common HTML block elements (headings, paragraphs, etc.):\ncleanedText = cleanedText.replace(/<h[1-6][^>]*>/g, '\\n'); // For headings (h1, h2, etc.)\ncleanedText = cleanedText.replace(/<\\/h[1-6]>/g, '\\n');  // Closing heading tags\ncleanedText = cleanedText.replace(/<p[^>]*>/g, '\\n');      // For paragraphs <p>\ncleanedText = cleanedText.replace(/<\\/p>/g, '\\n');         // Closing paragraph tags\ncleanedText = cleanedText.replace(/<ul[^>]*>/g, '\\n');     // For unordered lists <ul>\ncleanedText = cleanedText.replace(/<\\/ul>/g, '\\n');        // Closing unordered list tags\ncleanedText = cleanedText.replace(/<ol[^>]*>/g, '\\n');     // For ordered lists <ol>\ncleanedText = cleanedText.replace(/<\\/ol>/g, '\\n');        // Closing ordered list tags\ncleanedText = cleanedText.replace(/<li[^>]*>/g, '\\n');     // List items <li>\ncleanedText = cleanedText.replace(/<\\/li>/g, '\\n');        // Closing list item tags\n\n// Remove all remaining HTML tags\ncleanedText = cleanedText.replace(/<[^>]+>/g, '');\n\n// Remove special characters (you can customize this regex for more specific character removal)\ncleanedText = cleanedText.replace(/[^\\w\\s]/g, ' '); // Remove special characters except for word characters and spaces\n\n// Normalize whitespace (convert multiple spaces into a single space)\ncleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n\n// Output the cleaned and formatted text with line breaks\nreturn [\n  {\n    json: {\n      cleanedText: cleanedText // This will show plain text with line breaks\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        -96
+      ],
+      "id": "073f71c1-4a60-4aa9-a3c5-268833325158",
+      "name": "Function - Extract Text"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.product_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1248,
+        -96
+      ],
+      "id": "e2701d89-be22-4511-8ad8-faf605dbd9f1",
+      "name": "HTTP Request - Get Website Text"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        -304
+      ],
+      "id": "72ed619e-ca0f-4787-add7-5086bdea99e2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "RTZ6Wxq3SerBf3uc",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        176
+      ],
+      "id": "79a373ed-b8b2-41c7-91ab-707cc0815130",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "RTZ6Wxq3SerBf3uc",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Send a message in Gmail",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -384,
+        -384
+      ],
+      "id": "7d5e28ed-093e-4b0f-9297-414959150d77",
+      "name": "Send a message in Gmail",
+      "webhookId": "01e3f53f-391a-4cd5-8389-54f7f4401788",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PcDizznClgokvo06",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Business Cloud1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Support - AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Support - AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Function - Extract URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Training - AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Training - AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Training - AI Agent": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support - AI Agent": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Training - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Support - AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Support - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - Extract URL": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Get Website Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - Extract Text": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Get Website Text": {
+      "main": [
+        [
+          {
+            "node": "Function - Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Support - AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Training - AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Support - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "655d031a-0e65-46bd-8dcf-90d7a7a3caf8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e2317085f2a6c3307a77b687d73648b765641fbfc2da30683632940c648b6fba"
+  },
+  "id": "uDGK8v5l7Q1m434j",
+  "tags": []
+}
