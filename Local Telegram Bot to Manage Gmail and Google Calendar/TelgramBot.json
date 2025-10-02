@@ -1,0 +1,702 @@
+{
+  "name": "TelgramBot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        -240
+      ],
+      "id": "a0d72a36-e0bc-4c13-8b4a-d6df642ea312",
+      "name": "Telegram Trigger",
+      "webhookId": "2aa60d44-7c6f-4783-a5eb-e16051740d3f",
+      "credentials": {
+        "telegramApi": {
+          "id": "RrvMLnSUJA9XLjly",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0fed18f6-e9fa-4f9a-9ef3-bc1c90ff97f2",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        280,
+        -240
+      ],
+      "id": "37de5000-4b07-4741-b419-b796f21e9134",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        -380
+      ],
+      "id": "fae56944-d440-4642-9287-b8b7cec74a34",
+      "name": "Get Audio",
+      "webhookId": "bfc2229e-3b4d-4773-a113-aa4e892c3d93",
+      "credentials": {
+        "telegramApi": {
+          "id": "RrvMLnSUJA9XLjly",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# Role\nYou are a friendly assistant called Anjin-Sama.\nKeep your answer short and witty.\n\n# ADDITIONAL INFORMATION\n\nYou are now chatting with {{ $('Switch').item.json.message.chat.first_name }}.\nThe current date and time is {{ $now }}\n\n# TOOLS\n\n## Read Emails\nUse this tool to retrieve unread emails. You can also retrieve emails that have QA mentioned in them.\n\n## Send Emails\nUse this tool to send emails. This tool requires the recipient email, the email subject and body text.\n\n## Get Calendar\nUse this tool to retrieve events from Google Calendar.\n\n## Create Events\nUse this tool to create Google Calendar events.\n\n## Delete Events\nUse this tool to delete Google Calendar events.\n\n## ContactList\nUse this tool to retrieve contacts information about contacts, like their email addresses"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1120,
+        -220
+      ],
+      "id": "d979b847-9d7c-4108-b923-892d2a42df3d",
+      "name": "Anjin-Sama"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "954976c7-137b-4e61-97b3-b61269d606a1",
+              "name": "text",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        -160
+      ],
+      "id": "e7e1439b-487a-454e-9b4f-74d768a61fe3",
+      "name": "Agent-Input"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $fromAI('email_address', 'The recipient email address') }}",
+        "subject": "={{ $fromAI('email_subject', 'The email subject line') }}",
+        "emailType": "text",
+        "message": "={{ $fromAI('email_body', 'The email body') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1900,
+        80
+      ],
+      "id": "ae8584d2-e02e-4f93-967b-cf74a21cfb57",
+      "name": "Send Emails",
+      "webhookId": "310de2bc-4269-420f-9eb4-263411ffda84",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UFxqSZGVMWkL39Op",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "filters": {
+          "labelIds": [
+            "INBOX",
+            "UNREAD"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1760,
+        80
+      ],
+      "id": "b1bd8bf3-e221-477b-b09f-0f99bb80687d",
+      "name": "Read Emails",
+      "webhookId": "1c3b3eaf-3201-4301-9c50-f070c3eb9825",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UFxqSZGVMWkL39Op",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:14b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        680,
+        60
+      ],
+      "id": "5a11aa56-3f42-4ae7-a268-a4b6b9f1f22d",
+      "name": "Local qWen2.5:14b",
+      "credentials": {
+        "ollamaApi": {
+          "id": "PJI5iDAYhUQ8SEIc",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "zakbenmoulay@gmail.com",
+          "mode": "list",
+          "cachedResultName": "zakbenmoulay@gmail.com"
+        },
+        "start": "={{ $fromAI('start') }}",
+        "end": "={{ $fromAI('end') }}",
+        "additionalFields": {
+          "summary": "={{ $fromAI('email_title') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1480,
+        80
+      ],
+      "id": "625296a4-6bfc-400a-bd35-722d543acec6",
+      "name": "Create Events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "bs8iCozkd9YreTxp",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "zakbenmoulay@gmail.com",
+          "mode": "list",
+          "cachedResultName": "zakbenmoulay@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1620,
+        80
+      ],
+      "id": "21404638-ac92-4502-9f0f-276e82e5b5fc",
+      "name": "Get Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "bs8iCozkd9YreTxp",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        960,
+        60
+      ],
+      "id": "4ac1db8b-9a71-4597-bbb3-829ed8da0f81",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "2o8JUw9SM2FG5n6B",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "granite3-dense:2b"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        340
+      ],
+      "id": "6720cfb1-3ed0-44bb-b602-e8b5e062022d",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "PJI5iDAYhUQ8SEIc",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "contact_knowledge_base",
+        "toolDescription": "Use this tool to retrieve email addresses of contacts.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "MyContacts",
+          "mode": "list",
+          "cachedResultName": "MyContacts"
+        },
+        "includeDocumentMetadata": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        140
+      ],
+      "id": "718655e7-5e38-4db4-a2a3-334d4c534a76",
+      "name": "ContactList",
+      "credentials": {
+        "qdrantApi": {
+          "id": "xD642IXDnsPd2dAi",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bfb96280-8a49-4227-8fb3-850059f8419d",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1480,
+        -220
+      ],
+      "id": "e569a30e-e987-4f26-b222-3dcd1904053d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2000,
+        -420
+      ],
+      "id": "7d222cf3-84c3-40d5-b68c-50affb5d37ef",
+      "name": "Telegram-Audio",
+      "webhookId": "2c2bc1be-86aa-46fd-9d39-18c79e468b4c",
+      "credentials": {
+        "telegramApi": {
+          "id": "RrvMLnSUJA9XLjly",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2020,
+        -200
+      ],
+      "id": "cf663044-a703-4578-ac8a-5b323aee5edf",
+      "name": "Telegram-TXT",
+      "webhookId": "731892b1-3beb-49e4-ae1a-fc30b17d4b80",
+      "credentials": {
+        "telegramApi": {
+          "id": "RrvMLnSUJA9XLjly",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.18.1.22:9000/asr",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output",
+              "value": "json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "audio_file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 300000000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        -380
+      ],
+      "id": "03a1309e-adc9-442b-91b4-7217b21fe02d",
+      "name": "HTTP Request - Audio2Text"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.19.1.12:8880/v1/audio/speech",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"kokoro\",  \n  \"input\": \" {{ $json.output }}\",\n  \"voice\": \"af_sky\",\n  \"response_format\": \"mp3\",\n  \"speed\": 1.0\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        -420
+      ],
+      "id": "efe9130f-458f-4bfc-9217-9b8547b17fdf",
+      "name": "HTTP Request-TTS"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent-Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Audio2Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anjin-Sama": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent-Input": {
+      "main": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local qWen2.5:14b": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Events": {
+      "ai_tool": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "ContactList",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ContactList": {
+      "ai_tool": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request-TTS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram-TXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Audio2Text": {
+      "main": [
+        [
+          {
+            "node": "Anjin-Sama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request-TTS": {
+      "main": [
+        [
+          {
+            "node": "Telegram-Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c70be923-94ac-4359-a6e8-82c2deb0700e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3dc5e5dd004b54b6c8209879f1afa31a8ba3413519e21b6fcc760a138f2d95a"
+  },
+  "id": "7TlYl13ISh5rRIux",
+  "tags": [
+    {
+      "createdAt": "2025-02-20T18:39:56.144Z",
+      "updatedAt": "2025-02-20T18:39:56.144Z",
+      "id": "WshqZcj552ROiTTz",
+      "name": "telegram"
+    }
+  ]
+}
